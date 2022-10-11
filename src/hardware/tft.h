@@ -28,5 +28,5 @@ void init_tft()
 #endif
 
   tft.fillScreen(TFT_BLACK);
-  tft.initDMA();
+  // tft.initDMA();
 }

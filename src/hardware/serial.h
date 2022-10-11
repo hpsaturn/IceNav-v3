@@ -6,7 +6,7 @@
  * @date 2022-10-09
  */
 
-HardwareSerial *debug = &Serial;
+HWCDC *debug = &Serial;
 
 /**
  * @brief Serial port init (debug)
