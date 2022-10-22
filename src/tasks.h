@@ -8,8 +8,8 @@
 
 /**
  * @brief Task 1 - Read GPS data
- * 
- * @param pvParameters 
+ *
+ * @param pvParameters
  */
 void Read_GPS(void *pvParameters)
 {
@@ -17,16 +17,13 @@ void Read_GPS(void *pvParameters)
   debug->println(xPortGetCoreID());
   for (;;)
   {
-    if (gps->available() > 1)
+    if (gps->available())
     {
       GPS.encode(gps->read());
-      if (GPS.location.isValid())
-        is_gps_fixed = true;
 
 #ifdef OUTPUT_NMEA
-      if (gps->available())
       {
-        debug->println(GPS.location.lat());
+        debug->write(gps->read());
       }
 #endif
     }
@@ -35,9 +32,9 @@ void Read_GPS(void *pvParameters)
 }
 
 /**
- * @brief Task 2 - Main program 
- * 
- * @param pvParameters 
+ * @brief Task 2 - Main program
+ *
+ * @param pvParameters
  */
 void Main_prog(void *pvParameters)
 {
@@ -45,32 +42,16 @@ void Main_prog(void *pvParameters)
   debug->println(xPortGetCoreID());
   for (;;)
   {
+    //  if (BATTtime.update())
+    //    batt_level = Read_Battery();
 
-#ifdef ENABLE_PCF8574
-    key_pressed = Read_Keys();
-    if (KEYStime.update())
-      Check_keys(key_pressed);
-#endif
-    if (BATTtime.update())
-      batt_level = Read_Battery();
-
-    if (is_menu_screen)
-    {
-      show_menu_screen();
-    }
-    else if (!is_menu_screen)
-    {
-      if (!is_map_screen)
-        zoom_old = tilex = tiley = 0;
-      MainScreen[sel_MainScreen]();
-    }
     delay(1);
   }
 }
 
 /**
  * @brief Init Core tasks
- * 
+ *
  */
 void init_tasks()
 {

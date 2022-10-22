@@ -10,14 +10,14 @@
 #include <TinyGPS++.h>
 
 #define MAX_SATELLITES 60
-#define TIME_OFFSET 1 
+int TIME_OFFSET = 2;
 HardwareSerial *gps = &Serial2;
 TinyGPSPlus GPS;
-bool is_gps_fixed = false; 
+bool is_gps_fixed = false;
 
 /**
  * @brief Custom NMEA sentences
- * 
+ *
  */
 TinyGPSCustom totalGPGSVMessages(GPS, "GPGSV", 1); // $GPGSV sentence, first element
 TinyGPSCustom messageNumber(GPS, "GPGSV", 2);      // $GPGSV sentence, second element
@@ -29,9 +29,9 @@ TinyGPSCustom snr[4];
 
 /**
  * @brief Structure for satellite position (elevation, azimut,...)
- * 
+ *
  */
-struct 
+struct
 {
   bool active;
   int elevation;
@@ -43,7 +43,7 @@ struct
 
 /**
  * @brief Init GPS and custon NMEA parsing
- * 
+ *
  */
 void init_gps()
 {
@@ -57,23 +57,3 @@ void init_gps()
     snr[i].begin(GPS, "GPGSV", 7 + 4 * i);       // offsets 7, 11, 15, 19
   }
 }
-
-/**
- * @brief Read and parse NMEA sentences
- * 
- * @param ms -> delay between readings
- */
-void read_NMEA(unsigned long ms)
-{
-  unsigned long start = millis();
-  do
-  {
-    while (gps->available())
-    {
-      GPS.encode(gps->read());
-      if (GPS.location.isValid())
-        is_gps_fixed = true;
-    }
-  } while (millis() - start < ms);
-}
-
