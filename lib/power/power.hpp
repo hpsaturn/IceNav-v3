@@ -16,12 +16,12 @@
 #include <esp_bt_main.h>
 #include <esp_wifi.h>
 #include "tft.hpp"
+#include "lvgl.h"
 
 void powerDeepSeep();
 void powerLightSleepTimer(int millis);
 void powerLightSleep();
 void powerOffPeripherals();
-void powerOffScreen();
 void deviceSuspend();
 void deviceShutdown();
 void powerOn();
