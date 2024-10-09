@@ -15,6 +15,7 @@
 #include <esp_bt.h>
 #include <esp_bt_main.h>
 #include <esp_wifi.h>
+#include <esp_task_wdt.h>
 #include "tft.hpp"
 #include "lvgl.h"
 
