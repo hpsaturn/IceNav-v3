@@ -18,6 +18,7 @@
 #include <esp_task_wdt.h>
 #include "tft.hpp"
 #include "lvgl.h"
+#include "globalGuiDef.h"
 
 void powerDeepSeep();
 void powerLightSleepTimer(int millis);
