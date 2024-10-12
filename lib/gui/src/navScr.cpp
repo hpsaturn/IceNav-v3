@@ -3,7 +3,7 @@
  * @author Jordi Gauchía (jgauchia@gmx.es)
  * @brief  LVGL - Navigation screen 
  * @version 0.1.8_Alpha
- * @date 2024-09
+ * @date 2024-10
  */
 
  #include "navScr.hpp"
@@ -122,7 +122,7 @@ lv_obj_t *arrowNav;
     lv_obj_set_pos(distNav,10, 140);
 
     arrowNav = lv_img_create(screen);
-    lv_obj_set_pos(arrowNav,TFT_WIDTH - 150, 35);
+    lv_obj_set_pos(arrowNav,TFT_WIDTH - 100, 35);
   
     lv_img_set_src(arrowNav, &navup);
     lv_img_set_pivot(arrowNav, 50, 50) ;
