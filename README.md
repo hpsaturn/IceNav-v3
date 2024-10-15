@@ -64,12 +64,14 @@ Currently, IceNav works with the following hardware setups and specs
 | ESP32S3                |  16M  |  8M   | ``` [env:ESP32S3_N16R8] ```  |     YES      |
 | [ELECROW ESP32 Terminal](https://www.elecrow.com/esp-terminal-with-esp32-3-5-inch-parallel-480x320-tft-capacitive-touch-display-rgb-by-chip-ili9488.html) |  16M  |  8M   | ``` [env:ELECROW_ESP32] ```  | YES [^1] [^2]|
 | [MAKERFABS ESP32S3](https://www.makerfabs.com/esp32-s3-parallel-tft-with-touch-ili9488.html) |  16M  |  2M   | ``` [env:MAKERF_ESP32S3] ``` |   TESTING    |
-| [LILYGO T-DECK](https://www.lilygo.cc/products/t-deck) |  16M  |  8M   | ``` [env:TDECK_ESP32S3] ``` |   TESTING    |
+| [LILYGO T-DECK](https://www.lilygo.cc/products/t-deck) |  16M  |  8M   | ``` [env:TDECK_ESP32S3] ``` |   YES    |
 
 If the board has a BOOT button (GPIO0) it is possible to use power saving functions.
 To do this, simply include the following Build Flag in the required env in platformio.ini
 
 ```-DPOWER_SAVE```
+```-DARDUINO_RUNNING_CORE=1```
+```-DARDUINO_EVENT_RUNNING_CORE=1```
 
 > [!IMPORTANT]
 > Currently, this project can run on any board with an ESP32S3 and at least a 320x480 TFT screen. The idea is to support all existing boards on the market that I can get to work, so if you don't want to use the specific IceNav board, please feel free to create an issue, and I will look into providing support.
@@ -88,8 +90,6 @@ To do this, simply include the following Build Flag in the required env in platf
 If TFT shares SPI bus with SD card add the followings Build Flag to platformio.ini
 
 ```-DSPI_SHARED```
-```-DARDUINO_RUNNING_CORE=1```
-```-DARDUINO_EVENT_RUNNING_CORE=1```
 
 ### Modules
 
