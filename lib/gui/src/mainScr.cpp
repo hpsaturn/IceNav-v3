@@ -258,8 +258,6 @@ void updateMap(lv_event_t *event)
       
       releaseSdSPI();
             
-      // deleteMapScrSprites();
-      // createMapScrSprites();
       generateVectorMap(viewPort, memCache, mapTempSprite); 
       
       isPosMoved = false;
@@ -291,22 +289,7 @@ void updateSatTrack(lv_event_t *event)
   if (GPS.altitude.isUpdated())
     lv_label_set_text_fmt(altLabel, "ALT:\n%4dm.", (int)GPS.altitude.meters());
 
-  #ifdef AT6558D_GPS
-    switch ((int)activeGnss)
-    {
-      case 0:
-        fillSatInView(GPS_GSV, TFT_GREEN);
-        break;
-      case 1:
-        fillSatInView(GL_GSV, TFT_BLUE);
-        break;
-      case 2:
-        fillSatInView(BD_GSV, TFT_RED);
-        break;
-    }
-  #else
-    fillSatInView(GPS_GSV, TFT_GREEN);
-  #endif
+  fillSatInView();
 }
 
 /**
