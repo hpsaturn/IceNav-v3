@@ -3,7 +3,7 @@
  * @author Jordi Gauchía (jgauchia@gmx.es)
  * @brief TFT definition and functions
  * @version 0.1.8_Alpha
- * @date 2024-09
+ * @date 2024-10
  */
 
 #include "tft.hpp"
@@ -18,60 +18,7 @@ bool waitScreenRefresh = false;
   extern const uint8_t TFT_SPI_BL;
 #endif
 
-/**
- * @brief Set the TFT brightness
- *
- * @param brightness -> 0..255 / 0..15 for T-DECK
- */
-void setBrightness(uint8_t brightness)
-{
-  
-  #ifndef TDECK_ESP32S3 
-  if (brightness <= 255)
-  {
-   ledcWrite(0, brightness);
-   brightnessLevel = brightness;
-  }
-  #endif
 
-  #ifdef TDECK_ESP32S3 
-    static uint8_t level = 0;
-    static uint8_t steps = 16;
-    if (brightness == 0) 
-    {
-      digitalWrite(TFT_SPI_BL, 0);
-      delay(3);
-      level = 0;
-      return;
-    }
-    if (level == 0) 
-    {
-      digitalWrite(TFT_SPI_BL, 1);
-      level = steps;
-      delayMicroseconds(30);
-    }
-    int from = steps - level;
-    int to = steps - brightness;
-    int num = (steps + to - from) % steps;
-    for (int i = 0; i < num; i++) 
-    {
-      digitalWrite(TFT_SPI_BL, 0);
-      digitalWrite(TFT_SPI_BL, 1);
-    }
-    level = brightness;
-    brightnessLevel = brightness;
-  #endif
-}
-
-/**
- * @brief Get the TFT brightness
- *
- * @return int -> brightness value 0..255 / 0..15 for T-DECK
- */
-uint8_t getBrightness()
-{
-  return brightnessLevel;
-}
 
 /**
  * @brief Turn on TFT Sleep Mode for ILI9488
@@ -177,28 +124,6 @@ void initTFT()
   tft.startWrite();
   tft.fillScreen(TFT_BLACK);
   tft.endWrite();
-
-#ifdef ICENAV_BOARD
-  gpio_set_drive_capability(GPIO_NUM_45, GPIO_DRIVE_CAP_3);
-#endif
-#ifdef ESP32_N16R4
-  gpio_set_drive_capability(GPIO_NUM_33, GPIO_DRIVE_CAP_3);
-#endif
-#ifdef ESP32S3_N16R8
-  gpio_set_drive_capability(GPIO_NUM_45, GPIO_DRIVE_CAP_3);
-#endif
-#ifdef MAKERF_ESP32S3
-  gpio_set_drive_capability(GPIO_NUM_45, GPIO_DRIVE_CAP_3);
-#endif
-#ifdef ELECROW_ESP32
-  gpio_set_drive_capability(GPIO_NUM_46, GPIO_DRIVE_CAP_3);
-#endif
-
-#ifndef TDECK_ESP32S3
-  ledcSetup(0, 5000, 8);
-  ledcAttachPin(TFT_BL, 0);
-  ledcWrite(0, 255);
-#endif
 
 #ifdef TOUCH_INPUT
   touchCalibrate();

@@ -3,7 +3,7 @@
  * @author Jordi Gauchía (jgauchia@gmx.es)
  * @brief  LVGL - GPS satellite search screen
  * @version 0.1.8_Alpha
- * @date 2024-09
+ * @date 2024-10
  */
 
 #include "searchSatScr.hpp"
@@ -36,11 +36,9 @@ void buttonEvent(lv_event_t *event)
  *
  */
 void searchGPS(lv_timer_t *searchTimer)
-{
-  if (GPS.location.isValid())
+{ 
+  if (isGpsFixed)
   {
-    isGpsFixed = true;
-   
     millisActual = millis();
     while (millis() < millisActual + 2000)
       ;
@@ -48,6 +46,7 @@ void searchGPS(lv_timer_t *searchTimer)
     isSearchingSat = false;
     loadMainScreen();
   }
+
   if (skipSearch)
   {
     lv_timer_del(searchTimer);

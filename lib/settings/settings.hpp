@@ -3,15 +3,16 @@
  * @author Jordi Gauchía (jgauchia@gmx.es)
  * @brief  Settings functions
  * @version 0.1.8_Alpha
- * @date 2024-09
+ * @date 2024-10
  */
 
 #ifndef SETTINGS_HPP
 #define SETTINGS_HPP
 
 #include <EasyPreferences.hpp>
-#include <TinyGPS++.h>
+#include <NMEAGPS.h>
 #include "gps.hpp"
+#include "battery.hpp"
 #include "compass.hpp"
 
 extern uint8_t minZoom;        // Min Zoom Level
@@ -19,6 +20,9 @@ extern uint8_t maxZoom;        // Max Zoom Level
 extern uint8_t defZoomRender;  // Default Zoom Level for render map
 extern uint8_t defZoomVector;  // Default Zoom Level for vector map
 extern uint8_t zoom;           // Actual Zoom Level
+extern uint8_t defBright;      // Default brightness
+extern float batteryMax;       // 4.2;      // maximum voltage of battery
+extern float batteryMin;       // 3.6;      // minimum voltage of battery before shutdown
 
 extern bool isMapRotation;    // Map Compass Rotation
 extern uint8_t defaultZoom;   // Default Zoom Value
@@ -56,6 +60,7 @@ void saveMapType(bool vector);
 void saveShowMap(bool mapMode);
 void saveGpsGpio(int8_t txGpio, int8_t rxGpio);
 void saveWebFile(bool status);
+void saveBrightness(uint8_t vb);
 void printSettings();
 
 #endif

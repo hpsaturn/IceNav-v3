@@ -2,7 +2,7 @@
  * @file globalGuiDef.h
  * @brief  Global GUI Variables
  * @version 0.1.8_Alpha
- * @date 2024-09
+ * @date 2024-10
  */
 
 #ifndef GLOBALGUIDEF_H
@@ -40,6 +40,8 @@ extern lv_obj_t *buttonBar;            // Button Bar
 extern lv_obj_t *menuBtn;              // Button Menu
 extern lv_obj_t *waypointName;         // Add / Edit Waypoint screen text area
 extern bool isScreenRotated;           // Flag to know if screen is rotated
+
+extern lv_obj_t *powerMsg;             // Power Message
 
 #ifdef LARGE_SCREEN
   static const lv_font_t *fontDefault = &lv_font_montserrat_14;

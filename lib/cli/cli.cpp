@@ -3,7 +3,7 @@
  * @author @Hpsaturn
  * @brief  Network CLI and custom internal commands
  * @version Using https://github.com/hpsaturn/esp32-wifi-cli.git
- * @date 2024-09
+ * @date 2024-10
  */
 
 #ifndef DISABLE_CLI
@@ -93,6 +93,10 @@ void wcli_scshot(char *args, Stream *response)
     response->println("Note: is possible to send it to a PC using: scshot ip port");
   }
   else {
+    if (!WiFi.isConnected()) {
+      response->println("Please connect your WiFi first!");
+      return;
+    }
     response->printf("Sending screenshot to %s:%i..\r\n", ip.c_str(), port);
 
     waitScreenRefresh = true;

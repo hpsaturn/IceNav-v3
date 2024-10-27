@@ -3,7 +3,7 @@
  * @author Jordi Gauchía (jgauchia@gmx.es)
  * @brief  ESP32 Power Management functions
  * @version 0.1.8_Alpha
- * @date 2024-09
+ * @date 2024-10
  */
 
 #ifndef POWER_HPP
@@ -17,6 +17,7 @@
 #include <esp_wifi.h>
 #include "tft.hpp"
 #include "lvgl.h"
+#include "globalGuiDef.h"
 
 void powerDeepSeep();
 void powerLightSleepTimer(int millis);

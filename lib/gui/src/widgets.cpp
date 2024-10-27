@@ -3,7 +3,7 @@
  * @author Jordi Gauchía (jgauchia@gmx.es)
  * @brief  LVGL - Widgets
  * @version 0.1.8_Alpha
- * @date 2024-09
+ * @date 2024-10
  */
 
 #include "widgets.hpp"
@@ -104,10 +104,10 @@ void positionWidget(_lv_obj_t *screen)
     lv_obj_clear_flag(obj, LV_OBJ_FLAG_SCROLLABLE);
     latitude = lv_label_create(obj);
     lv_obj_set_style_text_font(latitude, fontMedium, 0);
-    lv_label_set_text_fmt(latitude, "%s", latFormatString(getLat()));
+    lv_label_set_text_fmt(latitude, "%s", latFormatString(gpsData.latitude));
     longitude = lv_label_create(obj);
     lv_obj_set_style_text_font(longitude, fontMedium, 0);
-    lv_label_set_text_fmt(longitude, "%s", lonFormatString(getLon()));
+    lv_label_set_text_fmt(longitude, "%s", lonFormatString(gpsData.longitude));
     lv_obj_t *img = lv_img_create(obj);
     lv_img_set_src(img, positionIconFile);
     lv_img_set_zoom(img,iconScale);

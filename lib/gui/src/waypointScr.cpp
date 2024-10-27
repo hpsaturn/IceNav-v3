@@ -3,7 +3,7 @@
  * @author Jordi Gauchía (jgauchia@gmx.es)
  * @brief  LVGL - Waypoint Screen
  * @version 0.1.8_Alpha
- * @date 2024-09
+ * @date 2024-10
  */
 
 #include "waypointScr.hpp"
@@ -164,8 +164,8 @@ void updateWaypointPos()
   switch (wptAction)
   {
     case WPT_ADD:
-      addWpt.lat = getLat();
-      addWpt.lon = getLon();
+      addWpt.lat = gpsData.latitude;
+      addWpt.lon = gpsData.longitude;
       lv_label_set_text_static(lat, latFormatString(addWpt.lat));
       lv_label_set_text_static(lon, lonFormatString(addWpt.lon));
       break;

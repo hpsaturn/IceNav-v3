@@ -3,7 +3,7 @@
  * @author Jordi Gauchía (jgauchia@gmx.es)
  * @brief  ESP32 Power Management functions
  * @version 0.1.8_Alpha
- * @date 2024-09
+ * @date 2024-10
  */
 
 #include "power.hpp"
@@ -56,6 +56,8 @@ void powerLightSleep()
 void deviceSuspend()
 {
   int brightness = tft.getBrightness();
+  lv_msgbox_close(powerMsg); 
+  lv_refr_now(display);
   tftOff();
   powerLightSleep();
   tftOn(brightness);
@@ -81,9 +83,7 @@ void deviceShutdown()
 void powerOffPeripherals()
 {
   tftOff();
-  #ifdef TDECK_ESP32S3
-    SPI.end();
-  #endif
+  SPI.end();
   Wire.end();
 }
 

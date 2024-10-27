@@ -3,7 +3,7 @@
  * @author Jordi Gauchía (jgauchia@gmx.es)
  * @brief  LVGL Screen implementation
  * @version 0.1.8_Alpha
- * @date 2024-09
+ * @date 2024-10
  */
 
 #include "lvgl_private.h"
@@ -24,6 +24,7 @@ lv_style_t styleObjectSel; // New Objects Selected Color
 
 lv_group_t *scrGroup;     // Screen group
 lv_group_t *keyGroup;     // GPIO group
+lv_obj_t *powerMsg;       // Power Message
 
 /**
  * @brief LVGL display update
@@ -120,7 +121,6 @@ void IRAM_ATTR keypadRead(lv_indev_t *indev_driver, lv_indev_data_t *data)
 #ifdef POWER_SAVE
 
 extern const uint8_t BOARD_BOOT_PIN;
-uint32_t deviceSuspendCount = 0;
 
 /**
 * @brief LVGL GPIO read
@@ -150,7 +150,17 @@ void gpioLongEvent(lv_event_t *event)
 {
   lv_event_code_t code = lv_event_get_code(event);
   log_v("Shuting down device");
-  deviceSuspendCount = 1000;
+  powerMsg = lv_msgbox_create(lv_scr_act());
+  lv_obj_set_width(powerMsg,TFT_WIDTH - 20);
+  lv_obj_set_align(powerMsg,LV_ALIGN_CENTER);
+  lv_obj_set_style_text_font(powerMsg, fontDefault, 0);
+  lv_obj_t *labelText = lv_msgbox_get_content(powerMsg);
+  lv_obj_set_style_text_align(labelText, LV_TEXT_ALIGN_CENTER, 0);
+  lv_msgbox_add_text(powerMsg, LV_SYMBOL_WARNING " This device will shutdown shortly");
+  lv_obj_invalidate(powerMsg);
+  lv_refr_now(display);
+  vTaskDelay(2000);
+  deviceShutdown();
 }
 
 /**
@@ -163,7 +173,17 @@ void gpioClickEvent(lv_event_t *event)
   lv_indev_reset_long_press(lv_indev_active());
   lv_indev_reset(NULL,lv_scr_act());
   log_v("Entering sleep mode");
-  deviceSuspendCount = 300;
+  powerMsg = lv_msgbox_create(lv_scr_act());
+  lv_obj_set_width(powerMsg,TFT_WIDTH - 20);
+  lv_obj_set_align(powerMsg,LV_ALIGN_CENTER);
+  lv_obj_set_style_text_font(powerMsg, fontDefault, 0);
+  lv_obj_t *labelText = lv_msgbox_get_content(powerMsg);
+  lv_obj_set_style_text_align(labelText, LV_TEXT_ALIGN_CENTER, 0);
+  lv_msgbox_add_text(powerMsg, LV_SYMBOL_WARNING " This device will sleep shortly");
+  lv_obj_invalidate(powerMsg);
+  lv_refr_now(display);
+  vTaskDelay(2000);
+  deviceSuspend();
 }
 
 /**

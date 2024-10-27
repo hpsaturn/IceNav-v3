@@ -3,7 +3,7 @@
  * @author Jordi Gauchía (jgauchia@gmx.es)
  * @brief  Settings functions
  * @version 0.1.8_Alpha
- * @date 2024-09
+ * @date 2024-10
  */
 
 #include "settings.hpp"
@@ -30,6 +30,7 @@ uint8_t zoom = 0;           // Actual Zoom Level
  */
 bool isMapRotation = true;    // Map Compass Rotation
 uint8_t defaultZoom = 0;      // Default Zoom Value
+uint8_t defBright = 255;      // Default Brightness
 bool showMapCompass = true;   // Compass in map screen
 bool isCompassRot = true;     // Compass rotation in map screen
 bool showMapSpeed = true;     // Speed in map screen
@@ -48,6 +49,8 @@ uint16_t speedPosX = 0;       // Speed widget position X
 uint16_t speedPosY = 0;       // Speed widget position Y
 bool enableWeb = true;        // Enable/disable web file server
 bool showToolBar = false;     // Show Map Toolbar
+// float batteryMax = 0.0;       // 4.2;      // maximum voltage of battery
+// float batteryMin = 0.0;       // 3.6;      // minimum voltage of battery before shutdown
 
 /**
  * @brief Load stored preferences
@@ -61,7 +64,6 @@ void loadPreferences()
   offY = cfg.getFloat(PKEYS::KCOMP_OFFSET_Y, 0.0);
 #endif
   isMapRotation = cfg.getBool(PKEYS::KMAP_ROT, false);
-  zoom = defaultZoom;
   showMapCompass = cfg.getBool(PKEYS::KMAP_COMPASS, true);
   isCompassRot = cfg.getBool(PKEYS::KCOMP_ROT, true);
   showMapSpeed = cfg.getBool(PKEYS::KMAP_SPEED, true);
@@ -77,6 +79,7 @@ void loadPreferences()
   speedPosX = cfg.getInt(PKEYS::KSPEED_X, 1);
   speedPosY = cfg.getInt(PKEYS::KSPEED_Y, TFT_HEIGHT - 130);
   isVectorMap = cfg.getBool(PKEYS::KMAP_VECTOR, false);
+  defBright = cfg.getUInt(PKEYS::KDEF_BRIGT, 254);
   if (isVectorMap)
   {
     minZoom = 1;
@@ -89,6 +92,7 @@ void loadPreferences()
     maxZoom = 17;
     defaultZoom = cfg.getUInt(PKEYS::KDEF_ZOOM, defZoomRender);
   }
+  zoom = defaultZoom;
   isMapFullScreen = cfg.getBool(PKEYS::KMAP_MODE, true);
   GPS_TX = cfg.getUInt(PKEYS::KGPS_TX, GPS_TX);
   GPS_RX = cfg.getUInt(PKEYS::KGPS_RX, GPS_RX);
@@ -105,6 +109,9 @@ void loadPreferences()
   speedPosX = cfg.isKey(CONFKEYS::KSPEED_X) ? cfg.getInt(CONFKEYS::KSPEED_X, speedPosX) : 3;
   speedPosY = cfg.isKey(CONFKEYS::KSPEED_Y) ? cfg.getInt(CONFKEYS::KSPEED_Y, speedPosY) : 94;
   #endif
+
+  batteryMax = cfg.getFloat(PKEYS::KVMAX_BATT,4.2);
+  batteryMin = cfg.getFloat(PKEYS::KVMIN_BATT,3.6);
 
   // compassPosX = 60;
   // compassPosY = 82;
@@ -201,17 +208,17 @@ void saveGPSBaud(uint16_t gpsBaud)
   if (gpsBaud != 4)
   {
 #ifdef AT6558D_GPS
-    gps->flush();
-    gps->println(GPS_BAUD_PCAS[gpsBaud]);
-    gps->flush();
-    gps->println("$PCAS00*01\r\n");
-    gps->flush();
+    gpsPort.flush();
+    gpsPort.println(GPS_BAUD_PCAS[gpsBaud]);
+    gpsPort.flush();
+    gpsPort.println("$PCAS00*01\r\n");
+    gpsPort.flush();
     delay(500);
 #endif
-    gps->flush();
-    gps->end();
+    gpsPort.flush();
+    gpsPort.end();
     delay(500);
-    gps->begin(GPS_BAUD[gpsBaud], SERIAL_8N1, GPS_RX, GPS_TX);
+    gpsPort.begin(GPS_BAUD[gpsBaud], SERIAL_8N1, GPS_RX, GPS_TX);
     delay(500);
   }
   else
@@ -220,10 +227,10 @@ void saveGPSBaud(uint16_t gpsBaud)
 
     if (gpsBaudDetected != 0)
     {
-      gps->flush();
-      gps->end();
+      gpsPort.flush();
+      gpsPort.end();
       delay(500);
-      gps->begin(gpsBaudDetected, SERIAL_8N1, GPS_RX, GPS_TX);
+      gpsPort.begin(gpsBaudDetected, SERIAL_8N1, GPS_RX, GPS_TX);
       delay(500);
     }
   }
@@ -238,11 +245,11 @@ void saveGPSUpdateRate(uint16_t gpsUpdateRate)
 {
   cfg.saveShort(PKEYS::KGPS_RATE, gpsUpdateRate);
 #ifdef AT6558D_GPS
-  gps->flush();
-  gps->println(GPS_RATE_PCAS[gpsUpdateRate]);
-  gps->flush();
-  gps->println("$PCAS00*01\r\n");
-  gps->flush();
+  gpsPort.flush();
+  gpsPort.println(GPS_RATE_PCAS[gpsUpdateRate]);
+  gpsPort.flush();
+  gpsPort.println("$PCAS00*01\r\n");
+  gpsPort.flush();
   delay(500);
 #endif
 }
@@ -310,6 +317,16 @@ void saveGpsGpio(int8_t txGpio, int8_t rxGpio)
 void saveWebFile(bool status)
 {
   cfg.saveBool(PKEYS::KWEB_FILE, status);
+}
+
+/**
+ * @brief Save default Brightness
+ *
+ * @param status 
+ */
+void saveBrightness(uint8_t vb)
+{
+  cfg.saveUInt(PKEYS::KDEF_BRIGT, vb);
 }
 
 /**
