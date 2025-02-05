@@ -2,15 +2,11 @@
  * @file lvglSetup.cpp
  * @author Jordi Gauchía (jgauchia@gmx.es)
  * @brief  LVGL Screen implementation
- * @version 0.1.8_Alpha
- * @date 2024-09
+ * @version 0.1.9
+ * @date 2024-12
  */
 
-#include "lvgl_private.h"
 #include "lvglSetup.hpp"
-#include "waypointScr.hpp"
-#include "waypointListScr.hpp"
-#include "globalGuiDef.h"
 
 ViewPort viewPort; // Vector map viewport
 MemCache memCache; // Vector map Memory Cache
@@ -22,8 +18,11 @@ lv_style_t styleThemeBkg;  // New Main Background Style
 lv_style_t styleObjectBkg; // New Objects Background Color
 lv_style_t styleObjectSel; // New Objects Selected Color
 
-lv_group_t * scrGroup;     // Screen group
+lv_group_t *scrGroup;     // Screen group
+lv_group_t *keyGroup;     // GPIO group
+lv_obj_t *powerMsg;       // Power Message
 
+Power power;
 
 /**
  * @brief LVGL display update
@@ -31,24 +30,13 @@ lv_group_t * scrGroup;     // Screen group
  */
 void IRAM_ATTR displayFlush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
 { 
-  // if (tft.getStartCount() == 0) 
-  // {
-  //   tft.startWrite();  
-  // }
-  // tft.waitDMA(); 
-  // tft.setSwapBytes(true);
-  // tft.pushImage(area->x1, area->y1, area->x2 - area->x1 + 1, area->y2 - area->y1 + 1, (uint16_t*)px_map);
-  // tft.setSwapBytes(false);
-  // tft.display(); 
-
   uint32_t w = (area->x2 - area->x1 + 1);
   uint32_t h = (area->y2 - area->y1 + 1);
 
-  tft.startWrite();
   tft.setSwapBytes(true);
   tft.setAddrWindow(area->x1, area->y1, w, h);
   tft.pushImageDMA(area->x1, area->y1, area->x2 - area->x1 + 1, area->y2 - area->y1 + 1, (uint16_t*)px_map);
-  tft.endWrite();
+  tft.setSwapBytes(false);
 
   lv_display_flush_ready(disp);
 }
@@ -71,7 +59,7 @@ void IRAM_ATTR touchRead(lv_indev_t *indev_driver, lv_indev_data_t *data)
     }
     else if (lv_display_get_rotation(display) == LV_DISPLAY_ROTATION_270)
     {
-      data->point.x = 320 - touchY;
+      data->point.x = TFT_WIDTH - touchY;
       data->point.y = touchX;
     }
     data->state = LV_INDEV_STATE_PRESSED;
@@ -115,6 +103,83 @@ void IRAM_ATTR keypadRead(lv_indev_t *indev_driver, lv_indev_data_t *data)
   }
   data->key = last_key;
 }
+#endif
+
+#ifdef POWER_SAVE
+
+extern const uint8_t BOARD_BOOT_PIN;
+
+/**
+* @brief LVGL GPIO read
+*
+*/
+void IRAM_ATTR gpioRead(lv_indev_t *indev_driver, lv_indev_data_t *data)
+{
+  uint8_t currentStat = gpioGetBut();
+
+  if (currentStat == 0)
+  {
+    data->key = LV_KEY_ENTER;
+    data->state = LV_INDEV_STATE_PRESSED;
+  }
+  else
+  {
+    data->key = 0;
+    data->state = LV_INDEV_STATE_RELEASED;
+  }
+}
+
+/**
+* @brief LVGL GPIO long read event
+*
+*/
+void gpioLongEvent(lv_event_t *event)
+{
+  log_v("Shuting down device");
+  powerMsg = lv_msgbox_create(lv_scr_act());
+  lv_obj_set_width(powerMsg,TFT_WIDTH);
+  lv_obj_set_align(powerMsg,LV_ALIGN_CENTER);
+  lv_obj_set_style_text_font(powerMsg, fontDefault, 0);
+  lv_obj_t *labelText = lv_msgbox_get_content(powerMsg);
+  lv_obj_set_style_text_align(labelText, LV_TEXT_ALIGN_CENTER, 0);
+  lv_msgbox_add_text(powerMsg, LV_SYMBOL_WARNING " This device will shutdown shortly");
+  lv_obj_invalidate(powerMsg);
+  lv_refr_now(display);
+  vTaskDelay(2000);
+  power.deviceShutdown();
+}
+
+/**
+* @brief LVGL GPIO short read event
+*
+*/
+void gpioClickEvent(lv_event_t *event)
+{
+  lv_indev_reset_long_press(lv_indev_active());
+  lv_indev_reset(NULL,lv_scr_act());
+  log_v("Entering sleep mode");
+  powerMsg = lv_msgbox_create(lv_scr_act());
+  lv_obj_set_width(powerMsg,TFT_WIDTH);
+  lv_obj_set_align(powerMsg,LV_ALIGN_CENTER);
+  lv_obj_set_style_text_font(powerMsg, fontDefault, 0);
+  lv_obj_t *labelText = lv_msgbox_get_content(powerMsg);
+  lv_obj_set_style_text_align(labelText, LV_TEXT_ALIGN_CENTER, 0);
+  lv_msgbox_add_text(powerMsg, LV_SYMBOL_WARNING " This device will sleep shortly");
+  lv_obj_invalidate(powerMsg);
+  lv_refr_now(display);
+  vTaskDelay(2000);
+  power.deviceSuspend();
+}
+
+/**
+* @brief LVGL GPIO read
+*
+*/
+uint8_t gpioGetBut()
+{
+  return digitalRead(BOARD_BOOT_PIN);
+}
+
 #endif
 
 /**
@@ -193,11 +258,6 @@ void initLVGL()
 {
   lv_init();
   
-  #ifdef TDECK_ESP32S3
-    scrGroup = lv_group_create();
-    lv_group_set_default(scrGroup);
-  #endif
-
   display = lv_display_create(TFT_WIDTH, TFT_HEIGHT);
   lv_display_set_flush_cb(display, displayFlush);
   lv_display_set_flush_wait_cb(display, NULL);
@@ -233,10 +293,26 @@ void initLVGL()
   #endif
 
   #ifdef TDECK_ESP32S3  
+    scrGroup = lv_group_create();
+    lv_group_set_default(scrGroup);
     lv_indev_t *indev_keypad = lv_indev_create();
     lv_indev_set_type(indev_keypad, LV_INDEV_TYPE_KEYPAD);
     lv_indev_set_read_cb(indev_keypad, keypadRead);
     lv_indev_set_group(indev_keypad, lv_group_get_default());
+  #endif
+
+  #ifdef POWER_SAVE
+    lv_indev_t *indev_gpio = lv_indev_create();
+    lv_indev_set_type(indev_gpio, LV_INDEV_TYPE_KEYPAD);
+    lv_indev_set_read_cb(indev_gpio, gpioRead);
+    lv_indev_set_long_press_time(indev_gpio, longPressTime);
+
+    keyGroup = lv_group_create();
+    lv_group_add_obj(keyGroup,lv_scr_act());
+    lv_indev_set_group(indev_gpio, keyGroup);
+
+    lv_indev_add_event_cb(indev_gpio, gpioLongEvent, LV_EVENT_LONG_PRESSED, NULL);
+    lv_indev_add_event_cb(indev_gpio, gpioClickEvent, LV_EVENT_SHORT_CLICKED, NULL);
   #endif
   
   //  Create Main Timer
@@ -270,6 +346,7 @@ void initLVGL()
 void loadMainScreen()
 {
   isMainScreen = true;
+  isScrolled = true;
   isSearchingSat = false;
   wptAction = WPT_NONE;
   lv_screen_load(mainScreen);

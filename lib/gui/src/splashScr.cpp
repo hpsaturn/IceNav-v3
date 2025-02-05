@@ -2,8 +2,8 @@
  * @file splashScr.hpp
  * @author Jordi Gauchía (jgauchia@gmx.es)
  * @brief  Splash screen - NOT LVGL
- * @version 0.1.8_Alpha
- * @date 2024-09
+ * @version 0.1.9
+ * @date 2024-12
  */
 
 #include "splashScr.hpp"
@@ -18,16 +18,22 @@ void splashScreen()
 {
   tft.fillScreen(TFT_BLACK);
   millisActual = millis();
-  setBrightness(0);
+  tft.setBrightness(0);
 
   static uint16_t pngHeight = 0;
   static uint16_t pngWidth = 0;
 
   getPngSize(logoFile,&pngWidth,&pngHeight);
   tft.drawPngFile(logoFile, (tft.width() / 2) - (pngWidth/2), (tft.height() / 2) - pngHeight);
+  
+  tft.setTextSize(1);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+
+  tft.drawCenterString("Map data from OpenStreetMap.",tft.width() >> 1, TFT_HEIGHT - 120 );
+  tft.drawCenterString("(c) OpenStreetMap",tft.width() >> 1, TFT_HEIGHT - 110 );
+  tft.drawCenterString("(c) OpenStreetMap contributors",tft.width() >> 1, TFT_HEIGHT - 100 );
 
   char statusString[50] = "";
-  tft.setTextSize(1);
   tft.setTextColor(TFT_YELLOW, TFT_BLACK);
 
   memset(&statusString[0], 0, sizeof(statusString));
@@ -53,32 +59,32 @@ void splashScreen()
   memset(&statusString[0], 0, sizeof(statusString));
   tft.setTextColor(TFT_WHITE, TFT_BLACK);
 
-  #ifndef TDECK_ESP32S3
-    const uint8_t maxBrightness = 254;
-  #endif
-  #ifdef TDECK_ESP32S3
-    const uint8_t maxBrightness = 15;
-  #endif
+  const uint8_t maxBrightness = 255;
 
-  for (uint8_t fadeIn = 0; fadeIn <= maxBrightness; fadeIn++)
+  for (uint8_t fadeIn = 0; fadeIn <= ( maxBrightness - 1); fadeIn++)
   {
-    setBrightness(fadeIn);
+    tft.setBrightness(fadeIn);
     millisActual = millis();
     while (millis() < millisActual + 15)
       ;
   }
 
-  for (uint8_t fadeOut = maxBrightness; fadeOut > 0; fadeOut--)
-  {
-    setBrightness(fadeOut);
-    millisActual = millis();
-    while (millis() < millisActual + 15)
-      ;
-  }
-
+  millisActual = millis();
   while (millis() < millisActual + 100)
     ;
 
+  for (uint8_t fadeOut = maxBrightness; fadeOut > 0; fadeOut--)
+  {
+    tft.setBrightness(fadeOut);
+    millisActual = millis();
+    while (millis() < millisActual + 15)
+      ;
+  }
+
   tft.fillScreen(TFT_BLACK);
-  setBrightness(maxBrightness);
+  
+  while (millis() < millisActual + 100)
+    ;
+  
+  tft.setBrightness(defBright);
 }

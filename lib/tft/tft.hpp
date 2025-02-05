@@ -2,8 +2,8 @@
  * @file tft.hpp
  * @author Jordi Gauchía (jgauchia@gmx.es)
  * @brief TFT definition and functions
- * @version 0.1.8_Alpha
- * @date 2024-09
+ * @version 0.1.9
+ * @date 2024-12
  */
 
 #ifndef TFT_HPP
@@ -32,7 +32,11 @@
 #include "ILI9488_NOTOUCH_8B.hpp"
 #endif
 
-#ifdef LILYGO_TDECK
+#ifdef ICENAV_BOARD
+#include "ICENAV_BOARD.hpp"
+#endif
+
+#ifdef TDECK_ESP32S3
 #include "LILYGO_TDECK.hpp"
 #endif
 
@@ -42,21 +46,11 @@ extern TFT_eSPI tft;
 static const char* calibrationFile PROGMEM = "/spiffs/TouchCal";
 extern bool repeatCalib;
 
-#ifndef LILYGO_TDECK
-static uint8_t brightnessLevel = 255;
-#endif
-#ifdef LILYGO_TDECK
-static uint8_t brightnessLevel = 15;
-#endif
-
 extern uint16_t TFT_WIDTH;
 extern uint16_t TFT_HEIGHT;
 extern bool waitScreenRefresh;                  // Wait for refresh screen (screenshot issues)
 
-
-void setBrightness(uint8_t brightness);
-uint8_t getBrightness();
-void tftOn();
+void tftOn(uint8_t brightness);
 void tftOff();
 void touchCalibrate();
 void initTFT();

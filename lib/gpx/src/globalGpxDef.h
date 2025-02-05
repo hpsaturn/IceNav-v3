@@ -2,8 +2,8 @@
  * @file globalGpxDef.h
  * @author Jordi Gauchía (jgauchia@gmx.es)
  * @brief  Global GPX Variables
- * @version 0.1.8_Alpha
- * @date 2024-09
+ * @version 0.1.9
+ * @date 2024-12
  */
 
 
@@ -15,6 +15,7 @@
 #include <regex>
 
 static const char* wptFile PROGMEM = "/WPT/waypoint.gpx";
+static const char* wptFolder PROGMEM = "/WPT";
 
 /**
  * @brief Waypoint action enum

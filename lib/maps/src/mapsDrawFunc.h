@@ -1,8 +1,8 @@
 /**
  * @file mapsDrawFunc.h
  * @brief  Extra Draw functions for maps
- * @version 0.1.8_Alpha
- * @date 2024-09
+ * @version 0.1.9
+ * @date 2024-12
  */
 
 #ifndef MAPSDRAWFUNC_H
@@ -75,7 +75,7 @@ static void drawMapWidgets()
   if (isMapRotation)
     mapHeading = heading;
   else
-    mapHeading = GPS.course.deg();
+    mapHeading = gpsData.heading;
   if (showMapCompass)
   {
     mapSprite.fillRectAlpha(MAP_WIDTH - 48, 0, 48, 48, 95, TFT_BLACK);
@@ -94,8 +94,8 @@ static void drawMapWidgets()
     mapHeight = MAP_HEIGHT;
 
 
-  int toolBarOffset = 0;
-  int toolBarSpace = 0;
+  uint8_t toolBarOffset = 0;
+  uint8_t toolBarSpace = 0;
   #ifdef LARGE_SCREEN
     toolBarOffset = 100;
     toolBarSpace = 60;
@@ -132,7 +132,7 @@ static void drawMapWidgets()
   {
     mapSprite.fillRectAlpha(0, mapHeight - 32, 70, 32, 95, TFT_BLACK);
     mapSprite.pushImage(0, mapHeight - 28, 24, 24, (uint16_t *)speed_ico, TFT_BLACK);
-    mapSprite.drawNumber((uint16_t)GPS.speed.kmph(), 26, mapHeight - 24 , &fonts::FreeSansBold9pt7b);
+    mapSprite.drawNumber(gpsData.speed, 26, mapHeight - 24 , &fonts::FreeSansBold9pt7b);
   }
 
   if (!isVectorMap)
@@ -154,12 +154,6 @@ static void drawMapWidgets()
  */
 static void displayMap(uint16_t tileSize)
 {
-  if (tft.getStartCount() == 0) 
-  {
-    tft.startWrite();  
-  }
-  tft.waitDMA(); 
-
   if (!isMapFullScreen)
     mapSprite.pushSprite(0, 27); 
   else
@@ -167,18 +161,18 @@ static void displayMap(uint16_t tileSize)
 
   if (isMapFound)
   {
-    navArrowPosition = coord2ScreenPos(getLon(), getLat(), zoom, tileSize);
+    navArrowPosition = coord2ScreenPos(gpsData.longitude, gpsData.latitude, zoom, tileSize);
 
     #ifdef ENABLE_COMPASS
 
     if (isMapRotation)
       mapHeading = heading;
     else
-      mapHeading = GPS.course.deg();
+      mapHeading = gpsData.heading;
 
     #else 
 
-    mapHeading = GPS.course.deg();
+    mapHeading = gpsData.heading;
 
     #endif
 
@@ -189,7 +183,10 @@ static void displayMap(uint16_t tileSize)
     }
 
     if (tileSize == VECTOR_TILE_SIZE)
+    {
+      mapTempSprite.pushImage(wptPosX-8, wptPosY-8, 16 ,16 ,(uint16_t*)waypoint, TFT_BLACK);
       mapTempSprite.setPivot(tileSize , tileSize );
+    }
 
     mapTempSprite.pushRotated(&mapSprite, 360 - mapHeading, TFT_TRANSPARENT);
     //mapTempSprite.pushRotated(&mapSprite, 0, TFT_TRANSPARENT);

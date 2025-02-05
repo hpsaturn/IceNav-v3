@@ -2,8 +2,8 @@
  * @file waypointListScr.hpp
  * @author Jordi Gauchía (jgauchia@gmx.es)
  * @brief  LVGL - Waypoint list screen
- * @version 0.1.8_Alpha
- * @date 2024-09
+ * @version 0.1.9
+ * @date 2024-12
  */
 
 #include "waypointListScr.hpp"
@@ -56,6 +56,8 @@ void waypointListEvent(lv_event_t * event)
                         else 
                             lv_obj_add_flag(navTile,LV_OBJ_FLAG_HIDDEN);
 
+                        isPosMoved = true;
+                        
                         loadMainScreen();
                         break;
                     case WPT_EDIT:
@@ -94,7 +96,7 @@ void waypointListEvent(lv_event_t * event)
 {
     listWaypointScreen = lv_table_create(NULL);
     lv_obj_set_size(listWaypointScreen, TFT_WIDTH, TFT_HEIGHT);    
-    lv_table_set_cell_value(listWaypointScreen, 0, 0, " Waypoints");
+    lv_table_set_cell_value(listWaypointScreen, 0, 0, LV_SYMBOL_LEFT " Waypoints");
     lv_table_set_column_width(listWaypointScreen,0,TFT_WIDTH);
     lv_obj_add_event_cb(listWaypointScreen, waypointListEvent, LV_EVENT_ALL, NULL);
     lv_obj_set_style_pad_ver(listWaypointScreen, 15, LV_PART_ITEMS);
@@ -115,7 +117,6 @@ void updateWaypointListScreen()
     lv_table_set_row_count(listWaypointScreen, 1);
     isMainScreen = false;  
 
-    acquireSdSPI();
     log_i("Trying to open Waypoint file");
     File wayPointFile = SD.open(wptFile);
 
@@ -149,6 +150,4 @@ void updateWaypointListScreen()
             wptSearch = wptFound.suffix().first;  
         }
     }
-
-    releaseSdSPI();
 }

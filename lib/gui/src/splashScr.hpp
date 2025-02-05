@@ -2,15 +2,15 @@
  * @file splashScr.hpp
  * @author Jordi Gauchía (jgauchia@gmx.es)
  * @brief  Splash screen - NOT LVGL
- * @version 0.1.8_Alpha
- * @date 2024-09
+ * @version 0.1.9
+ * @date 2024-12
  */
 
 #ifndef SPLASHSCR_HPP
 #define SPLASHSCR_HPP
 
-#include "tft.hpp"
 #include "globalGuiDef.h"
+#include "settings.hpp"
 
 #ifdef LARGE_SCREEN
 static const char* logoFile PROGMEM = "/spiffs/LOGO_LARGE.png";

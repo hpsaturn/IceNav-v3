@@ -1,8 +1,8 @@
 /**
  * @file globalGuiDef.h
  * @brief  Global GUI Variables
- * @version 0.1.8_Alpha
- * @date 2024-09
+ * @version 0.1.9
+ * @date 2024-12
  */
 
 #ifndef GLOBALGUIDEF_H
@@ -32,6 +32,7 @@ extern lv_obj_t *waypointScreen;       // Add Waypoint Screen
 extern lv_obj_t *listWaypointScreen;   // List Waypoint Screen
 
 extern lv_group_t * scrGroup;          // Screen group
+extern lv_group_t * keyGroup;          // GPIO group
 
 extern bool needReboot;                // Flag to force device reboot
 extern bool isSearchingSat;            // Flag to indicate that is searching satellites
@@ -39,6 +40,8 @@ extern lv_obj_t *buttonBar;            // Button Bar
 extern lv_obj_t *menuBtn;              // Button Menu
 extern lv_obj_t *waypointName;         // Add / Edit Waypoint screen text area
 extern bool isScreenRotated;           // Flag to know if screen is rotated
+
+extern lv_obj_t *powerMsg;             // Power Message
 
 #ifdef LARGE_SCREEN
   static const lv_font_t *fontDefault = &lv_font_montserrat_14;
@@ -86,14 +89,9 @@ static bool getPngSize(const char* filename, uint16_t *width, uint16_t *height)
     return false;
   }
 
-  byte table[32];
+  uint8_t table[32];
 
-  // for (int i = 0; file.available() && i < 32; i++)
-  // {
-  //   table[i] = file.read();
-  // }
-
-  fread(table, sizeof(byte), 32, file);
+  fread(table, sizeof(uint8_t), 32, file);
 
   *width=table[16]*256*256*256+table[17]*256*256+table[18]*256+table[19];
   *height=table[20]*256*256*256+table[21]*256*256+table[22]*256+table[23];

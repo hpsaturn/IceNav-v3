@@ -3,7 +3,7 @@
  * @author @Hpsaturn
  * @brief  Network CLI and custom internal commands
  * @version Using https://github.com/hpsaturn/esp32-wifi-cli.git
- * @date 2024-09
+ * @date 2024-12
  */
 
 #ifndef DISABLE_CLI
@@ -22,15 +22,27 @@ const char logo[] =
 ""
 ;
 
+extern Power power;
+
+/**
+ * @brief Reboot ESP
+ */
 void wcli_reboot(char *args, Stream *response)
 {
   ESP.restart();
 }
 
-void wcli_poweroff(char *args, Stream *response) {
-  deviceSuspend();
+/**
+ * @brief ESP Deep Sleep/shutdown
+ */
+void wcli_poweroff(char *args, Stream *response)
+{
+  power.deviceShutdown();
 }
 
+/**
+ * @brief Display device info
+ */
 void wcli_info(char *args, Stream *response)
 {
   setlocale(LC_NUMERIC, "");
@@ -62,6 +74,9 @@ void wcli_info(char *args, Stream *response)
   response->printf("GPS Rx GPIO:\t: %i\r\n",GPS_RX);
 }
 
+/**
+ * @brief Clear user settings
+ */
 void wcli_swipe(char *args, Stream *response)
 {
   Pair<String, String> operands = wcli.parseCommand(args);
@@ -72,11 +87,17 @@ void wcli_swipe(char *args, Stream *response)
   response->println("done");
 }
 
+/**
+ * @brief Clear CLI console
+ */
 void wcli_clear(char *args, Stream *response)
 {
   wcli.shell->clear();
 }
 
+/**
+ * @brief Take a screenshot
+ */
 void wcli_scshot(char *args, Stream *response)
 {
   Pair<String, String> operands = wcli.parseCommand(args);
@@ -93,6 +114,10 @@ void wcli_scshot(char *args, Stream *response)
     response->println("Note: is possible to send it to a PC using: scshot ip port");
   }
   else {
+    if (!WiFi.isConnected()) {
+      response->println("Please connect your WiFi first!");
+      return;
+    }
     response->printf("Sending screenshot to %s:%i..\r\n", ip.c_str(), port);
 
     waitScreenRefresh = true;
@@ -101,6 +126,47 @@ void wcli_scshot(char *args, Stream *response)
   }
 }
 
+/**
+ * @brief list of user preference key. This depends of EasyPreferences manifest.
+ * @author @Hpsaturn. Method migrated from CanAirIO project
+ */
+void wcli_klist(char *args, Stream *response)
+{
+  Pair<String, String> operands = wcli.parseCommand(args);
+  String opt = operands.first();
+  int key_count = PKEYS::KUSER+1;
+  if (opt.equals("all")) key_count = 0; // Only show the basic keys to configure
+  response->printf("\n%11s \t%s \t%s \r\n", "KEYNAME", "DEFINED", "VALUE");
+  response->printf("\n%11s \t%s \t%s \r\n", "=======", "=======", "=====");
+
+  for (int i = key_count; i < PKEYS::KCOUNT; i++) {
+    if (i == PKEYS::KUSER) continue;
+    String key = cfg.getKey((CONFKEYS)i);
+    bool isDefined = cfg.isKey(key);
+    String defined = isDefined ? "custom " : "default";
+    String value = "";
+    if (isDefined) value = cfg.getValue(key);
+    response->printf("%11s \t%s \t%s \r\n", key, defined.c_str(), value.c_str());
+  }
+}
+
+/**
+ * @brief set an user preference key. This depends of EasyPreferences manifest.
+ * @author @Hpsaturn. Method migrated from CanAirIO project
+ */
+void wcli_kset(char *args, Stream *response)
+{
+  Pair<String, String> operands = wcli.parseCommand(args);
+  String key = operands.first();
+  String v = operands.second();
+  if(cfg.saveAuto(key,v)){
+    response->printf("saved key %s\t: %s\r\n", key, v);
+  }
+}
+
+/**
+ * @brief Waypoint list, download or delete
+ */
 void wcli_waypoint(char *args, Stream *response)
 {
   Pair<String, String> operands = wcli.parseCommand(args);
@@ -121,8 +187,6 @@ void wcli_waypoint(char *args, Stream *response)
   }
   else if (commands.equals("list"))
   {
-    acquireSdSPI();
-
     path = "/WPT";
 
     File dir = SD.open(path);
@@ -142,8 +206,6 @@ void wcli_waypoint(char *args, Stream *response)
       response->println(entry.size());
     }
     dir.close();
-
-    releaseSdSPI();
   }
   else if (commands.equals("down"))
   {
@@ -184,14 +246,11 @@ void wcli_waypoint(char *args, Stream *response)
 
       response->println("Connected to server");
       
-      acquireSdSPI();
-      
       File file = SD.open(path, FILE_READ);
       if (!file)
       {
         response->println("Failed to open file for reading");
         client.stop();
-        releaseSdSPI();
         return;
       }
 
@@ -208,8 +267,6 @@ void wcli_waypoint(char *args, Stream *response)
       file.close();
       client.stop();
       response->println("Waypoint file sent over WiFi");
-      
-      releaseSdSPI();
     }
   }
   else if (commands.equals("del"))
@@ -218,8 +275,6 @@ void wcli_waypoint(char *args, Stream *response)
       response->println(F("File name missing"));
     else
     {
-      acquireSdSPI();
-
       path = "/WPT/" + fileDel;
       if (!SD.remove(path))
       {
@@ -232,55 +287,33 @@ void wcli_waypoint(char *args, Stream *response)
         response->print(fileDel);
         response->println(F(" deleted"));
       }
-
-      releaseSdSPI();
     }
   }
 }
 
-void wcli_settings(char *args, Stream *response)
+/**
+ * @brief Output NMEA sentences in CLI
+ */
+void wcli_outnmea (char *args, Stream *response)
 {
-  Pair<String, String> operands = wcli.parseCommand(args);
-  String commands = operands.first();
-  String value = operands.second();
-  int8_t gpio = -1;
-
-  if (commands.isEmpty())
-  {
-    response->println("");
-    response->println(F( "\033[1;31m----\033[1;32m Available commands \033[1;31m----\033[0;37m\r\n" ));
-    response->println(F( "\033[1;32msetgpstx:\t\033[0;37mset GPS Tx GPIO"));
-    response->println(F( "\033[1;32msetgpsrx:\t\033[0;37mset GPS Rx GPIO"));
-  }
-  else if (commands.equals("setgpstx"))
-  {
-      if(value.isEmpty())
-        response->println(F("Tx GPIO missing, use: setgpstx \033[1;32mGPIO\033[0;37m"));
-      else
-      {
-        gpio = value.toInt();
-        saveGpsGpio(gpio, -1);
-        response->println("");
-        response->printf("GPS \033[1;31mTx GPIO\033[0;37m set to: \033[1;32m%i\033[0;37m\r\n",gpio);
-        response->println("Please reboot device");
-      }
-  }
-  else if (commands.equals("setgpsrx"))
-  {
-      if(value.isEmpty())
-        response->println(F("Rx GPIO missing, use: setgpsrx \033[1;32mGPIO\033[0;37m"));
-      else
-      {
-        gpio = value.toInt();
-        saveGpsGpio(-1, gpio);
-        response->println("");
-        response->printf("GPS \033[1;31mRx GPIO\033[0;37m set to: \033[1;32m%i\033[0;37m\r\n",gpio);
-        response->println("Please reboot device");
-      }
-  }
+    nmea_output_enable = !nmea_output_enable;
 }
 
+/**
+ * @brief Cancel NMEA Output
+ */
+void wcli_abort_handler () 
+{
+  if (nmea_output_enable) {
+    nmea_output_enable = false;
+    delay(100);
+    Serial.println("\r\nCancel NMEA output!");
+  } 
+}
 
+/**
+ * @brief Webfile server enable/disable option
+ */
 void wcli_webfile(char *args, Stream *response)
 {
   Pair<String, String> operands = wcli.parseCommand(args);
@@ -307,6 +340,25 @@ void wcli_webfile(char *args, Stream *response)
   }
 }
 
+/**
+ * @brief Set DST (daylight saving time) zone EU or USA
+ */
+void wcli_setdst(char *args, Stream *response)
+{
+  Pair<String, String> operands = wcli.parseCommand(args);
+  String commands = operands.first();
+  if (commands.isEmpty())
+    response->println(F("missing parameter use: setdstzone \033[1;32mNONE/EU/USA\033[0;37m"));
+  else
+  {
+    commands.toUpperCase();
+    if(commands.equals("NONE") || commands.equals("EU") || commands.equals("USA") )
+      cfg.saveAuto("defDST",commands);
+    else
+      response->println(F("wrong parameter use: \033[1;32mNONE/EU/USA\033[0;37m"));
+  }
+}
+
 void initRemoteShell()
 {
 #ifndef DISABLE_CLI_TELNET 
@@ -314,7 +366,8 @@ void initRemoteShell()
 #endif
 }
 
-void initShell(){
+void initShell()
+{
   wcli.shell->attachLogo(logo);
   wcli.setSilentMode(true);
   // Main Commands:
@@ -325,8 +378,12 @@ void initShell(){
   wcli.add("clear", &wcli_clear, "\t\tclear shell");
   wcli.add("scshot", &wcli_scshot, "\tscreenshot to SD or sending a PC");
   wcli.add("waypoint", &wcli_waypoint, "\twaypoint utilities");
-  wcli.add("settings", &wcli_settings, "\tdevice settings");
   wcli.add("webfile", &wcli_webfile, "\tenable/disable Web file server");
+  wcli.add("klist", &wcli_klist, "\t\tlist of user preferences. ('all' param show all)");
+  wcli.add("kset", &wcli_kset, "\t\tset an user extra preference");
+  wcli.add("outnmea", &wcli_outnmea, "\ttoggle GPS NMEA output (or Ctrl+C to stop)");
+  wcli.add("setdstzone", &wcli_setdst, "\tset DST (Daylight Saving Time zone: NONE, EU or USA)");
+  wcli.shell->overrideAbortKey(&wcli_abort_handler);
   wcli.begin("IceNav");
 }
 

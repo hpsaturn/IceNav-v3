@@ -11,9 +11,10 @@
         "-DBOARD_HAS_PSRAM",
         "-DARDUINO_USB_MODE=1",
         "-DARDUINO_USB_CDC_ON_BOOT=1",
-        "-DILI9488_FT5x06_SPI",
-        "-DTFT_BL=45",
-        "-DSPI_SHARED",
+        "-DPOWER_SAVE",
+        "-DADC2",
+        "-DBATT_PIN=ADC2_CHANNEL_6",
+        "-DTFT_BL=46",
         "-DAT6558D_GPS",
         "-DQMC5883",
         "-DBME280"

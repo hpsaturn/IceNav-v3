@@ -2,8 +2,8 @@
  * @file bme.cpp
  * @author Jordi Gauchía (jgauchia@gmx.es)
  * @brief  BME280 Sensor functions
- * @version 0.1.8_Alpha
- * @date 2024-09
+ * @version 0.1.9
+ * @date 2024-12
  */
 
 #include "bme.hpp"

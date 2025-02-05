@@ -2,14 +2,11 @@
  * @file renderMaps.cpp
  * @author Jordi Gauchía (jgauchia@gmx.es)
  * @brief  Render maps draw functions
- * @version 0.1.8_Alpha
- * @date 2024-09
+ * @version 0.1.9
+ * @date 2024-12
  */
 
 #include "renderMaps.hpp"
-#include "mapsDrawFunc.h"
-
-extern const int SD_CS;
 
 MapTile oldMapTile = {(char*)"", 0, 0, 0};     // Old Map tile coordinates and zoom
 MapTile currentMapTile = {(char*)"", 0, 0, 0}; // Current Map tile coordinates and zoom
@@ -19,8 +16,6 @@ ScreenCoord navArrowPosition = {0,0};  // Map Arrow position
 bool isMapFound = false;
 
 tileBounds totalBounds = { 90.0, -90.0, 180.0, -180.0}; 
-
-
 
 /**
  * @brief Tile size for position calculation
@@ -163,7 +158,7 @@ MapTile getMapTile(double lon, double lat, uint8_t zoomLevel, int16_t offsetX, i
  */
 void generateRenderMap()
 {
-  currentMapTile = getMapTile(getLon(), getLat(), zoom, 0, 0);
+  currentMapTile = getMapTile(gpsData.longitude, gpsData.latitude, zoom, 0, 0);
 
   bool foundRoundMap = false;
   bool missingMap = false;
@@ -172,11 +167,6 @@ void generateRenderMap()
   if (strcmp(currentMapTile.file, oldMapTile.file) != 0 || currentMapTile.zoom != oldMapTile.zoom || 
              currentMapTile.tilex != oldMapTile.tilex || currentMapTile.tiley != oldMapTile.tiley)
   {
-    acquireSdSPI();
-
-    // deleteMapScrSprites();
-    // createMapScrSprites();
-
     isMapFound  = mapTempSprite.drawPngFile(SD, currentMapTile.file, tileSize, tileSize);
 
     if (!isMapFound)
@@ -211,7 +201,7 @@ void generateRenderMap()
             // Skip Center Tile
             continue;
           }
-          roundMapTile = getMapTile(getLon(), getLat(), zoom, x, y);
+          roundMapTile = getMapTile(gpsData.longitude, gpsData.latitude, zoom, x, y);
 
           foundRoundMap = mapTempSprite.drawPngFile(SD, roundMapTile.file, (x - startX) * tileSize, (y - startY) * tileSize);
           if (!foundRoundMap)
@@ -251,9 +241,6 @@ void generateRenderMap()
 
       redrawMap = true;
     }
-
-    releaseSdSPI();
-    vTaskDelay(100);
 
     log_v("TILE: %s", oldMapTile.file);
   }
